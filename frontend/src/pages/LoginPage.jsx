@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLoginMutation } from '../redux/slices/usersApiSlice';
 import { setCredentials } from '../redux/slices/authSlice';
+import { Button, TextField, Typography, Container, Box, Link as MuiLink } from '@mui/material'; 
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -37,40 +39,59 @@ const LoginPage = () => {
     }
   };
 
-  return (
-    <div>
-      <h1>Sign In</h1>
-      <form onSubmit={submitHandler}>
-        <div>
-          <label htmlFor='email'>Email Address</label>
-          <input
-            type='email'
-            id='email'
+   return (
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography component="h1" variant="h5">
+          Sign In
+        </Typography>
+        <Box component="form" onSubmit={submitHandler} noValidate sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
-        </div>
-        <div>
-          <label htmlFor='password'>Password</label>
-          <input
-            type='password'
-            id='password'
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
-        </div>
-        <button type='submit' disabled={isLoading}>
-          {isLoading ? 'Signing In...' : 'Sign In'}
-        </button>
-      </form>
-      <div>
-        <p>
-          New Customer? <Link to='/signup'>Register</Link>
-        </p>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={isLoading}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            {isLoading ? 'Signing In...' : 'Sign In'}
+          </Button>
+          <MuiLink component={Link} to="/signup" variant="body2">
+            {"Don't have an account? Sign Up"}
+          </MuiLink>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

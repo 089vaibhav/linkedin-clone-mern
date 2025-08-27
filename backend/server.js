@@ -8,6 +8,10 @@ import postRoutes from './routes/postRoutes.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import messageRoutes from './routes/messageRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
+
+
 
 dotenv.config();
 connectDB();
@@ -40,6 +44,8 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes); 
 app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 const PORT = process.env.PORT || 5000;
 

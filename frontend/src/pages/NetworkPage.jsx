@@ -1,15 +1,30 @@
 // src/pages/NetworkPage.jsx
+import { Link } from 'react-router-dom';
 import {
   useGetPendingRequestsQuery,
   useAcceptRequestMutation,
   useRejectRequestMutation,
 } from '../redux/slices/usersApiSlice';
 
+// --- MUI Imports ---
+import {
+  Container,
+  Typography,
+  Paper,
+  List,
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  ListItemText,
+  Button,
+  Box,
+  CircularProgress,
+  Alert,
+  Divider,
+} from '@mui/material';
+
 const NetworkPage = () => {
-  // Fetch pending requests
   const { data: requests, isLoading, error } = useGetPendingRequestsQuery();
-  
-  // Get mutation hooks
   const [acceptRequest] = useAcceptRequestMutation();
   const [rejectRequest] = useRejectRequestMutation();
 
@@ -29,33 +44,87 @@ const NetworkPage = () => {
     }
   };
 
-  if (isLoading) return <div>Loading invitations...</div>;
-  if (error) return <div>Error fetching invitations.</div>;
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    if (error) {
+      return <Alert severity="error">Error fetching invitations.</Alert>;
+    }
+    if (requests?.length > 0) {
+      return (
+        <List>
+          {requests.map((req, index) => (
+            <div key={req._id}>
+              <ListItem
+                secondaryAction={
+                  <Box>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ mr: 1 }}
+                      onClick={() => handleReject(req._id)}
+                    >
+                      Ignore
+                    </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => handleAccept(req._id)}
+                    >
+                      Accept
+                    </Button>
+                  </Box>
+                }
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    component={Link}
+                    to={`/profile/${req._id}`}
+                    src={req.profilePic}
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography
+                      component={Link}
+                      to={`/profile/${req._id}`}
+                      sx={{
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {req.name}
+                    </Typography>
+                  }
+                  secondary={req.bio}
+                />
+              </ListItem>
+              {index < requests.length - 1 && (
+                <Divider variant="inset" component="li" />
+              )}
+            </div>
+          ))}
+        </List>
+      );
+    }
+    return <Typography sx={{ mt: 2 }}>No pending invitations.</Typography>;
+  };
 
   return (
-    <div>
-      <h2>My Network</h2>
-      <div className='invitations-section'>
-        <h3>Invitations</h3>
-        {requests?.length > 0 ? (
-          requests.map((req) => (
-            <div key={req._id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <img src={req.profilePic} alt={req.name} width="50" height="50" style={{ borderRadius: '50%', marginRight: '1rem' }} />
-                <span>{req.name}</span>
-                <p style={{ color: '#555', fontSize: '0.9rem' }}>{req.bio}</p>
-              </div>
-              <div>
-                <button onClick={() => handleReject(req._id)} style={{ marginRight: '0.5rem' }}>Ignore</button>
-                <button onClick={() => handleAccept(req._id)}>Accept</button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p>No pending invitations.</p>
-        )}
-      </div>
-    </div>
+    <Container maxWidth="sm">
+      <Paper elevation={2} sx={{ mt: 3, p: 2 }}>
+        <Typography variant="h5" component="h1" gutterBottom>
+          Invitations
+        </Typography>
+        {renderContent()}
+      </Paper>
+    </Container>
   );
 };
 

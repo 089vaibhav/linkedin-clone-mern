@@ -3,67 +3,113 @@ import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetUserQuery } from '../redux/slices/usersApiSlice';
 
-const ProfilePage = () => {
-  // Get the user ID from the URL
-  const { id: userId } = useParams();
-  
-  // Get the logged-in user's info from the Redux store
-  const { userInfo } = useSelector((state) => state.auth);
+// --- MUI Imports ---
+import {
+  Container,
+  Box,
+  Avatar,
+  Typography,
+  Button,
+  Paper,
+  Chip,
+  Grid,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import WorkIcon from '@mui/icons-material/Work';
 
-  // Fetch the profile data using the RTK Query hook
+const ProfilePage = () => {
+  const { id: userId } = useParams();
+  const { userInfo } = useSelector((state) => state.auth);
   const { data: user, isLoading, error } = useGetUserQuery(userId);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error?.data?.message || error.error}</div>;
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return <Alert severity="error">Error: {error?.data?.message || error.error}</Alert>;
+  }
 
   return (
-    <div>
-      {/* Banner and Profile Picture */}
-      <div style={{ position: 'relative', height: '200px', background: '#ccc' }}>
-        <img src={user.bannerPic} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <img src={user.profilePic} alt={user.name} style={{ position: 'absolute', top: '125px', left: '20px', width: '150px', height: '150px', borderRadius: '50%', border: '4px solid white' }} />
-      </div>
+    <Container maxWidth="md">
+      <Paper elevation={3} sx={{ mt: 2 }}>
+        {/* --- Profile Header with Banner and Avatar --- */}
+        <Box sx={{ position: 'relative', height: '250px' }}>
+          <Box
+            component="img"
+            src={user.bannerPic}
+            alt="Banner"
+            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          <Avatar
+            alt={user.name}
+            src={user.profilePic}
+            sx={{
+              width: 150,
+              height: 150,
+              border: '4px solid white',
+              position: 'absolute',
+              bottom: '-75px',
+              left: '24px',
+            }}
+          />
+        </Box>
 
-      <div style={{ paddingTop: '80px', paddingLeft: '20px' }}>
-        {/* Profile Header */}
-        <h2>{user.name}</h2>
-        {/* Conditionally render "Edit Profile" button */}
-        {userInfo._id === user._id && <button>Edit Profile</button>}
+        {/* --- User Info and Actions --- */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2 }}>
+          {userInfo._id === user._id && <Button variant="outlined">Edit Profile</Button>}
+        </Box>
         
-        <p>{user.bio}</p>
+        <Box sx={{ p: 3, pt: 6 /* Adjust padding to clear the avatar */ }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {user.name}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {user.bio || 'No bio available.'}
+          </Typography>
+        </Box>
 
-        {/* Skills Section */}
-        <div style={{ marginTop: '2rem' }}>
-          <h3>Skills</h3>
-          {user.skills?.length > 0 ? (
-            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', gap: '8px' }}>
-              {user.skills.map((skill, index) => (
-                <li key={index} style={{ background: '#e0e0e0', padding: '5px 10px', borderRadius: '15px' }}>
-                  {skill}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No skills listed.</p>
-          )}
-        </div>
+        {/* --- Skills Section --- */}
+        <Box sx={{ p: 3, borderTop: '1px solid #ddd' }}>
+          <Typography variant="h6" gutterBottom>Skills</Typography>
+          <Box>
+            {user.skills?.length > 0 ? (
+              user.skills.map((skill, index) => (
+                <Chip key={index} label={skill} sx={{ mr: 1, mb: 1 }} />
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary">No skills listed.</Typography>
+            )}
+          </Box>
+        </Box>
 
-        {/* Experience Section */}
-        <div style={{ marginTop: '2rem' }}>
-          <h3>Experience</h3>
+        {/* --- Experience Section --- */}
+        <Box sx={{ p: 3, borderTop: '1px solid #ddd' }}>
+          <Typography variant="h6" gutterBottom>Experience</Typography>
           {user.experience?.length > 0 ? (
             user.experience.map((exp, index) => (
-              <div key={index} style={{ marginBottom: '1rem' }}>
-                <h4>{exp.role}</h4>
-                <p>{exp.company} &middot; {exp.duration}</p>
-              </div>
+              <Grid container key={index} spacing={2} sx={{ mb: 2 }}>
+                <Grid item>
+                  <WorkIcon color="action" />
+                </Grid>
+                <Grid item>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{exp.role}</Typography>
+                  <Typography variant="body1">{exp.company}</Typography>
+                  <Typography variant="body2" color="text.secondary">{exp.duration}</Typography>
+                </Grid>
+              </Grid>
             ))
           ) : (
-            <p>No experience listed.</p>
+            <Typography variant="body2" color="text.secondary">No experience listed.</Typography>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

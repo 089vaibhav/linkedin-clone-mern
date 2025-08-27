@@ -2,29 +2,32 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useLikePostMutation, useAddCommentMutation } from '../redux/slices/postsApiSlice';
+
+// --- MUI Imports ---
 import {
-  useLikePostMutation,
-  useAddCommentMutation, // comment mutation
-} from '../redux/slices/postsApiSlice';
+  Card,
+  CardHeader,
+  CardContent,
+  CardActions,
+  Avatar,
+  Typography,
+  IconButton,
+  TextField,
+  Button,
+  Box,
+} from '@mui/material';
+import { ThumbUp, ThumbUpOutlined, ChatBubbleOutline } from '@mui/icons-material';
 
 const Post = ({ post }) => {
   const { userInfo } = useSelector((state) => state.auth);
-
-  // States for comment input + toggle
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
 
-  const [likePost, { isLoading }] = useLikePostMutation();
+  const [likePost] = useLikePostMutation();
   const [addComment, { isLoading: isCommenting }] = useAddCommentMutation();
 
   const isLiked = post.likes.includes(userInfo._id);
-
-  const formatDate = (date) =>
-    new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
 
   const handleLike = async () => {
     try {
@@ -46,143 +49,57 @@ const Post = ({ post }) => {
   };
 
   return (
-    <div
-      style={{
-        border: '1px solid #ddd',
-        padding: '1rem',
-        marginBottom: '1rem',
-        borderRadius: '8px',
-      }}
-    >
-      {/* --- Post Header --- */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-        <Link to={`/profile/${post.user._id}`}>
-          <img
-            src={post.user.profilePic}
-            alt={post.user.name}
-            width="50"
-            height="50"
-            style={{ borderRadius: '50%', marginRight: '1rem' }}
-          />
-        </Link>
-        <div>
-          <Link
-            to={`/profile/${post.user._id}`}
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <strong>{post.user.name}</strong>
-          </Link>
-          <p style={{ margin: 0, color: '#555', fontSize: '0.8rem' }}>
-            {formatDate(post.createdAt)}
-          </p>
-        </div>
-      </div>
-
-      {/* --- Post Content --- */}
-      <p>{post.content}</p>
-      {post.mediaUrl && (
-        <img
-          src={post.mediaUrl}
-          alt="Post media"
-          style={{ maxWidth: '100%', borderRadius: '8px' }}
-        />
-      )}
-
-      {/* --- Post Actions & Stats --- */}
-      <div
-        style={{
-          marginTop: '1rem',
-          color: '#555',
-          borderTop: '1px solid #eee',
-          paddingTop: '0.5rem',
-          display: 'flex',
-          gap: '1rem',
-        }}
-      >
-        <button
-          onClick={handleLike}
-          disabled={isLoading}
-          style={{
-            background: isLiked ? 'lightblue' : 'none',
-            border: '1px solid #ccc',
-            padding: '5px 10px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          {isLiked ? 'Unlike' : 'Like'} ({post.likes.length})
-        </button>
-        <button
-          onClick={() => setShowComments(!showComments)}
-          style={{
-            border: '1px solid #ccc',
-            padding: '5px 10px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          Comment ({post.comments.length})
-        </button>
-      </div>
-
-      {/* --- Comments Section --- */}
+    <Card sx={{ mb: 2 }}>
+      <CardHeader
+        avatar={
+          <Avatar component={Link} to={`/profile/${post.user._id}`} src={post.user.profilePic} />
+        }
+        title={<Typography variant="subtitle1" component={Link} to={`/profile/${post.user._id}`} sx={{ textDecoration: 'none', color: 'inherit' }}>{post.user.name}</Typography>}
+        subheader={new Date(post.createdAt).toLocaleDateString()}
+      />
+      <CardContent>
+        <Typography variant="body1">{post.content}</Typography>
+      </CardContent>
+      {/* Optional: Add CardMedia for images if you implement that */}
+      <CardActions disableSpacing>
+        <IconButton aria-label="like post" onClick={handleLike}>
+          {isLiked ? <ThumbUp color="primary" /> : <ThumbUpOutlined />}
+        </IconButton>
+        <Typography variant="body2">{post.likes.length}</Typography>
+        <IconButton aria-label="comment on post" onClick={() => setShowComments(!showComments)}>
+          <ChatBubbleOutline />
+        </IconButton>
+        <Typography variant="body2">{post.comments.length}</Typography>
+      </CardActions>
+      
       {showComments && (
-        <div style={{ marginTop: '1rem' }}>
-          {/* Comment Form */}
-          <form onSubmit={handleCommentSubmit}>
-            <input
-              type="text"
+        <CardContent>
+          <Box component="form" onSubmit={handleCommentSubmit} sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar src={userInfo.profilePic} sx={{ width: 35, height: 35, mr: 1 }} />
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
               placeholder="Add a comment..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              style={{ width: '80%', padding: '5px' }}
             />
-            <button
-              type="submit"
-              disabled={isCommenting}
-              style={{ marginLeft: '5px' }}
-            >
-              {isCommenting ? 'Posting...' : 'Post'}
-            </button>
-          </form>
-
-          {/* Comments List */}
-          <div style={{ marginTop: '1rem' }}>
+            <Button type="submit" disabled={isCommenting} sx={{ ml: 1 }}>Post</Button>
+          </Box>
+          <Box sx={{ mt: 2 }}>
             {post.comments.map((comment) => (
-              <div
-                key={comment._id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                <img
-                  src={comment.profilePic}
-                  alt={comment.name}
-                  width="35"
-                  height="35"
-                  style={{
-                    borderRadius: '50%',
-                    marginRight: '10px',
-                  }}
-                />
-                <div
-                  style={{
-                    background: '#f0f2f5',
-                    padding: '8px',
-                    borderRadius: '10px',
-                  }}
-                >
-                  <strong>{comment.name}</strong>
-                  <p style={{ margin: 0 }}>{comment.text}</p>
-                </div>
-              </div>
+              <Box key={comment._id} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+                <Avatar src={comment.profilePic} sx={{ width: 35, height: 35, mr: 1 }} />
+                <Box sx={{ bgcolor: 'grey.200', p: 1, borderRadius: '10px' }}>
+                  <Typography variant="caption" component={Link} to={`/profile/${comment.user}`} sx={{ fontWeight: 'bold', textDecoration: 'none', color: 'inherit' }}>{comment.name}</Typography>
+                  <Typography variant="body2">{comment.text}</Typography>
+                </Box>
+              </Box>
             ))}
-          </div>
-        </div>
+          </Box>
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
 };
 
